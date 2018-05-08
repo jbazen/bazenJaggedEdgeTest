@@ -24,6 +24,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
@@ -47,7 +48,9 @@ public class BitMexServiceImpl implements BitMexService {
 
     private static final String BIT_MEX_API_SECRET = "0tUigl4hMbAkc2FieZz2uIFQd5NeDny_irVpbKrfTo4r7oBF";
 
-    private WebSocketSession session = null;
+    private WebSocketSession quoteSession = null;
+
+    private WebSocketSession orderSession = null;
 
     private ObjectMapper objectMapper;
 
@@ -98,15 +101,15 @@ public class BitMexServiceImpl implements BitMexService {
 
     @Override
     public String stopStreamCurrentBidPrice() {
-        if (session == null) {
+        if (quoteSession == null) {
             return null;
         }
 
         String unsubOp = "{\"op\": \"unsubscribe\", \"args\": [\"quote:XBTUSD\"]}";
 
         try {
-            session.sendMessage(new TextMessage(unsubOp));
-            session.close();
+            quoteSession.sendMessage(new TextMessage(unsubOp));
+            quoteSession.close();
         } catch (Exception e) {
             return e.getMessage();
         } finally {
@@ -218,11 +221,19 @@ public class BitMexServiceImpl implements BitMexService {
 
         try {
             if (isSecure) {
+                if (orderSession != null && orderSession.isOpen()) {
+                    orderSession.close();
+                }
+
                 WebSocketHttpHeaders headers = getBitMexAuthWebSocketHeaders("GET/realtime", nonce);
 
-                session = client.doHandshake(handler, headers, new URI(builder.toUriString())).get();
+                orderSession = client.doHandshake(handler, headers, new URI(builder.toUriString())).get();
             } else {
-                session = client.doHandshake(handler, builder.toUriString()).get();
+                if (quoteSession != null && quoteSession.isOpen()) {
+                    quoteSession.close();
+                }
+
+                quoteSession = client.doHandshake(handler, builder.toUriString()).get();
             }
 
         } catch (InterruptedException e) {
@@ -230,6 +241,8 @@ public class BitMexServiceImpl implements BitMexService {
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (URISyntaxException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

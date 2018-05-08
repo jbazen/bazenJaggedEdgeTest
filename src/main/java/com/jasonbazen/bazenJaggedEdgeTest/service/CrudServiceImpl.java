@@ -35,7 +35,7 @@ public class CrudServiceImpl implements CrudService {
 
         if (nonceList == null || nonceList.isEmpty()) {
             NonceEntity nonceEntity = new NonceEntity();
-            nonceEntity.setNonce(45L);
+            nonceEntity.setNonce(1000L);
             nonceRepository.save(nonceEntity);
         }
     }

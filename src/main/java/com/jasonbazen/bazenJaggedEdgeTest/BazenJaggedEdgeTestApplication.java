@@ -27,11 +27,11 @@ public class BazenJaggedEdgeTestApplication {
         return args -> {
             crudService.seedNonceTable();
 
-			bitMexService.getCurrentBidPrice("XBTUSD");
+            bitMexService.getCurrentBidPrice("XBTUSD");
 
-			bitMexService.streamCurrentBidPrice("XBTUSD");
+            bitMexService.streamCurrentBidPrice("XBTUSD");
 
-			bitMexService.submitMarketOrder("XBTUSD");
+            bitMexService.submitMarketOrder("XBTUSD");
 
             bitMexService.submitAndMonitorMarketOrder("XBTUSD");
         };
